@@ -12,8 +12,6 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/clinic_db"
 
     openai_api_key: str = "mock-key"
-    google_client_id: str = "mock-google-client-id"
-    google_client_secret: str = "mock-google-client-secret"
 
     otp_expiry_minutes: int = 5
     chat_rate_limit_per_minute: int = 20

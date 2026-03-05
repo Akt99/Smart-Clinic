@@ -22,11 +22,3 @@ async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_d
         return TokenResponse(access_token=token)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-
-@router.get("/google-login")
-async def google_login():
-    return {
-        "message": "Google OAuth placeholder endpoint",
-        "next": "Implement OAuth callback and token exchange with Google provider",
-    }

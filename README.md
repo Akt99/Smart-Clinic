@@ -22,7 +22,7 @@ Full-stack starter for a clinic platform with:
                                        v
 +-------------------------------------------------------------------+
 |                          FastAPI Backend                           |
-|  - Auth (OTP + Google OAuth stub)                                 |
+|  - Auth (Phone Number + OTP)                                      |
 |  - Departments/Doctors/Slots                                       |
 |  - Appointments (transaction-safe booking)                         |
 |  - Chatbot service (prompt templates + guardrails + rate limits)   |
@@ -142,7 +142,6 @@ If symptoms are severe, advise booking consultation.
 ### Auth
 - `POST /api/v1/auth/send-otp`
 - `POST /api/v1/auth/verify-otp`
-- `GET /api/v1/auth/google-login`
 
 ### Departments / Doctors / Slots
 - `GET /api/v1/departments`
