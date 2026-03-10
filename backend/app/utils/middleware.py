@@ -1,8 +1,13 @@
+import logging
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
+from app.core.config import settings
 from app.core.security import decode_access_token
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -11,8 +16,10 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         except ValueError as exc:
             return JSONResponse(status_code=400, content={"detail": str(exc)})
-        except Exception:
-            return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+        except Exception as exc:
+            logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+            detail = str(exc) if settings.env == "development" else "Internal server error"
+            return JSONResponse(status_code=500, content={"detail": detail})
 
 
 class JWTClaimsMiddleware(BaseHTTPMiddleware):

@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16
@@ -19,6 +17,8 @@ services:
       context: ./backend
     env_file:
       - ./backend/.env.example
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/clinic_db
     ports:
       - "8000:8000"
     depends_on:

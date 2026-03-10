@@ -34,14 +34,19 @@ class AuthService:
         if otp != cached_otp:
             raise ValueError("Invalid OTP")
 
-        user = await self._get_or_create_patient(phone_number, full_name)
-        return create_access_token(str(user.id), user.role.name)
+        user, role_name = await self._get_or_create_patient(phone_number, full_name)
+        return create_access_token(str(user.id), role_name)
 
-    async def _get_or_create_patient(self, phone_number: str, full_name: str) -> User:
-        result = await self.db.execute(select(User).where(User.phone_number == phone_number))
-        user = result.scalar_one_or_none()
-        if user:
-            return user
+    async def _get_or_create_patient(self, phone_number: str, full_name: str) -> tuple[User, str]:
+        result = await self.db.execute(
+            select(User, Role.name)
+            .join(Role, User.role_id == Role.id)
+            .where(User.phone_number == phone_number)
+        )
+        existing = result.first()
+        if existing:
+            user, role_name = existing
+            return user, role_name
 
         role_result = await self.db.execute(select(Role).where(Role.name == "Patient"))
         role = role_result.scalar_one_or_none()
@@ -52,4 +57,4 @@ class AuthService:
         self.db.add(user)
         await self.db.commit()
         await self.db.refresh(user)
-        return user
+        return user, role.name
