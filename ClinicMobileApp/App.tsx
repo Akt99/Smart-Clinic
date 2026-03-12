@@ -1,7 +1,10 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Alert,
+  Easing,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -31,8 +34,35 @@ type AuthSession = {
   fullName: string;
 };
 
+type DepartmentInfo = {
+  name: string;
+  description: string;
+  doctors: string[];
+  imageUri: string;
+};
+
 const IOS_BASE_URL = 'http://localhost:8000/api/v1';
 const ANDROID_EMULATOR_BASE_URL = 'http://10.0.2.2:8000/api/v1';
+const DEPARTMENTS: DepartmentInfo[] = [
+  {
+    name: 'Psychiatry',
+    description: 'Mental wellness, mood support, and emotional health guidance.',
+    doctors: ['Dr. Sam Michael', 'Dr. Robin Ahmed'],
+    imageUri: 'https://i.pinimg.com/1200x/95/50/7b/95507ba220ef508566c715ed9a6e13b1.jpg',
+  },
+  {
+    name: 'Gynaecology',
+    description: "Women's reproductive health, cycle care, and pregnancy support.",
+    doctors: ['Dr. Tom Alter', 'Dr. Vikash Parekh'],
+    imageUri: 'https://i.pinimg.com/1200x/04/44/ca/0444ca029f95209bba4f9c0dee1f82f5.jpg',
+  },
+  {
+    name: 'Orthopaedics',
+    description: 'Bone, joint, spine, and muscle-related treatment and recovery.',
+    doctors: ['Dr. Ram Vilas', 'Dr. Amar Govind'],
+    imageUri: 'https://i.pinimg.com/1200x/f0/7d/6c/f07d6c3299d53f64b121d4370d70a470.jpg',
+  },
+];
 
 function normalizePhone(value: string): string {
   return value.replace(/\s+/g, '').trim();
@@ -56,6 +86,8 @@ function App(): React.JSX.Element {
   const [mockOtp, setMockOtp] = useState('');
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showDepartments, setShowDepartments] = useState(false);
+  const departmentCardAnimations = useRef(DEPARTMENTS.map(() => new Animated.Value(0))).current;
 
   const baseUrl = Platform.OS === 'android' ? ANDROID_EMULATOR_BASE_URL : IOS_BASE_URL;
   const homeTheme = {
@@ -87,6 +119,24 @@ function App(): React.JSX.Element {
 
   const canSendOtp = isValidPhone(cleanedPhone);
   const canVerifyOtp = otpSent && isValidPhone(cleanedPhone) && cleanedName.length >= 2 && isValidOtp(cleanedOtp);
+
+  useEffect(() => {
+    if (!showDepartments) {
+      return;
+    }
+    departmentCardAnimations.forEach(value => value.setValue(0));
+    Animated.stagger(
+      120,
+      departmentCardAnimations.map(value =>
+        Animated.timing(value, {
+          toValue: 1,
+          duration: 420,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ),
+    ).start();
+  }, [showDepartments, departmentCardAnimations]);
 
   const sendOtp = async () => {
     if (!canSendOtp || sendingOtp) {
@@ -155,6 +205,7 @@ function App(): React.JSX.Element {
 
   const logout = () => {
     setSession(null);
+    setShowDepartments(false);
     setPhoneNumber('');
     setFullName('');
     setOtp('');
@@ -163,6 +214,66 @@ function App(): React.JSX.Element {
   };
 
   if (session) {
+    if (showDepartments) {
+      return (
+        <SafeAreaView style={[styles.safeArea, {backgroundColor: homeTheme.screenBg}]}>
+          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+          <ScrollView contentContainerStyle={styles.homeContainer}>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
+              ]}
+              onPress={() => setShowDepartments(false)}>
+              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>Back to Home</Text>
+            </Pressable>
+
+            <Text style={[styles.homeTitle, {color: homeTheme.title}]}>Our Departments</Text>
+            <Text style={[styles.homeSubtitle, {color: homeTheme.subtitle}]}>
+              We specialise in the following domains
+            </Text>
+
+            {DEPARTMENTS.map((department, index) => {
+              const animationValue = departmentCardAnimations[index];
+              const translateY = animationValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [18, 0],
+              });
+              const scale = animationValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.98, 1],
+              });
+
+              return (
+                <Animated.View
+                  key={department.name}
+                  style={[
+                    styles.homeCard,
+                    {
+                      backgroundColor: homeTheme.cardBg,
+                      opacity: animationValue,
+                      transform: [{translateY}, {scale}],
+                    },
+                  ]}>
+                  <Image source={{uri: department.imageUri}} style={styles.departmentImage} resizeMode="cover" />
+                <Text style={[styles.sectionTitle, {color: homeTheme.title}]}>{department.name}</Text>
+                <Text style={[styles.homeSubtitle, {color: homeTheme.subtitle, marginBottom: 10}]}>
+                  {department.description}
+                </Text>
+                <Text style={[styles.homeLabel, {color: homeTheme.label}]}>Doctors</Text>
+                {department.doctors.map(doctor => (
+                  <Text key={doctor} style={[styles.homeValue, {color: homeTheme.value}]}>
+                    • {doctor}
+                  </Text>
+                ))}
+                </Animated.View>
+              );
+            })}
+          </ScrollView>
+        </SafeAreaView>
+      );
+    }
+
     return (
       <SafeAreaView style={[styles.safeArea, {backgroundColor: homeTheme.screenBg}]}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
@@ -210,7 +321,8 @@ function App(): React.JSX.Element {
               style={[
                 styles.secondaryButton,
                 {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}>
+              ]}
+              onPress={() => setShowDepartments(true)}>
               <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>Our Departments</Text>
             </Pressable>
           </View>
@@ -432,6 +544,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: {width: 0, height: 3},
     elevation: 2,
+  },
+  departmentImage: {
+    width: '100%',
+    height: 130,
+    borderRadius: 10,
+    marginBottom: 12,
   },
   homeLabel: {
     fontSize: 12,
