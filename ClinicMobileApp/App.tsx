@@ -41,6 +41,14 @@ type DepartmentInfo = {
   imageUri: string;
 };
 
+type AnimatedActionButtonProps = {
+  label: string;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+  onPress?: () => void;
+};
+
 const IOS_BASE_URL = 'http://localhost:8000/api/v1';
 const ANDROID_EMULATOR_BASE_URL = 'http://10.0.2.2:8000/api/v1';
 const DEPARTMENTS: DepartmentInfo[] = [
@@ -74,6 +82,48 @@ function isValidPhone(value: string): boolean {
 
 function isValidOtp(value: string): boolean {
   return /^\d{4,6}$/.test(value);
+}
+
+function AnimatedActionButton({
+  label,
+  backgroundColor,
+  borderColor,
+  textColor,
+  onPress,
+}: AnimatedActionButtonProps): React.JSX.Element {
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const animateTo = (toScale: number, toTranslateY: number) => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: toScale,
+        friction: 6,
+        tension: 110,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: toTranslateY,
+        friction: 6,
+        tension: 110,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <Animated.View style={{transform: [{scale}, {translateY}]}}>
+      <Pressable
+        style={[styles.secondaryButton, {backgroundColor, borderColor}]}
+        onPress={onPress}
+        onPressIn={() => animateTo(0.98, 1)}
+        onPressOut={() => animateTo(1, 0)}
+        onHoverIn={() => animateTo(1.02, -2)}
+        onHoverOut={() => animateTo(1, 0)}>
+        <Text style={[styles.secondaryButtonText, {color: textColor}]}>{label}</Text>
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 function App(): React.JSX.Element {
@@ -219,14 +269,13 @@ function App(): React.JSX.Element {
         <SafeAreaView style={[styles.safeArea, {backgroundColor: homeTheme.screenBg}]}>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
           <ScrollView contentContainerStyle={styles.homeContainer}>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}
-              onPress={() => setShowDepartments(false)}>
-              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>Back to Home</Text>
-            </Pressable>
+            <AnimatedActionButton
+              label="Back to Home"
+              backgroundColor={homeTheme.buttonBg}
+              borderColor={homeTheme.buttonBorder}
+              textColor={homeTheme.buttonText}
+              onPress={() => setShowDepartments(false)}
+            />
 
             <Text style={[styles.homeTitle, {color: homeTheme.title}]}>Our Departments</Text>
             <Text style={[styles.homeSubtitle, {color: homeTheme.subtitle}]}>
@@ -290,41 +339,35 @@ function App(): React.JSX.Element {
 
           <View style={[styles.homeCard, {backgroundColor: homeTheme.cardBg}]}>
             <Text style={[styles.sectionTitle, {color: homeTheme.title}]}>Quick Actions</Text>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}>
-              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>Book Appointment</Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}>
-              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>My Appointments</Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}>
-              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>
-                Open Department Chatbot
-              </Text>
-            </Pressable>
+            <AnimatedActionButton
+              label="Book Appointment"
+              backgroundColor={homeTheme.buttonBg}
+              borderColor={homeTheme.buttonBorder}
+              textColor={homeTheme.buttonText}
+            />
+            <AnimatedActionButton
+              label="My Appointments"
+              backgroundColor={homeTheme.buttonBg}
+              borderColor={homeTheme.buttonBorder}
+              textColor={homeTheme.buttonText}
+            />
+            <AnimatedActionButton
+              label="Health Assistant Chatbot"
+              backgroundColor={homeTheme.buttonBg}
+              borderColor={homeTheme.buttonBorder}
+              textColor={homeTheme.buttonText}
+            />
           </View>
 
           <View style={[styles.homeCard, {backgroundColor: homeTheme.cardBg}]}>
             <Text style={[styles.sectionTitle, {color: homeTheme.title}]}>About Us</Text>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {backgroundColor: homeTheme.buttonBg, borderColor: homeTheme.buttonBorder},
-              ]}
-              onPress={() => setShowDepartments(true)}>
-              <Text style={[styles.secondaryButtonText, {color: homeTheme.buttonText}]}>Our Departments</Text>
-            </Pressable>
+            <AnimatedActionButton
+              label="Our Departments"
+              backgroundColor={homeTheme.buttonBg}
+              borderColor={homeTheme.buttonBorder}
+              textColor={homeTheme.buttonText}
+              onPress={() => setShowDepartments(true)}
+            />
           </View>
 
           <View style={[styles.homeCard, {backgroundColor: homeTheme.cardBg}]}>
