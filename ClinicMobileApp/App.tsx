@@ -47,6 +47,7 @@ type AnimatedActionButtonProps = {
   borderColor: string;
   textColor: string;
   onPress?: () => void;
+  iconGlyph?: string;
 };
 
 const IOS_BASE_URL = 'http://localhost:8000/api/v1';
@@ -90,6 +91,7 @@ function AnimatedActionButton({
   borderColor,
   textColor,
   onPress,
+  iconGlyph,
 }: AnimatedActionButtonProps): React.JSX.Element {
   const scale = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -120,7 +122,14 @@ function AnimatedActionButton({
         onPressOut={() => animateTo(1, 0)}
         onHoverIn={() => animateTo(1.02, -2)}
         onHoverOut={() => animateTo(1, 0)}>
-        <Text style={[styles.secondaryButtonText, {color: textColor}]}>{label}</Text>
+        <View style={styles.buttonContent}>
+          {iconGlyph ? (
+            <View style={[styles.glyphBadge, {borderColor: textColor}]}>
+              <Text style={[styles.glyphText, {color: textColor}]}>{iconGlyph}</Text>
+            </View>
+          ) : null}
+          <Text style={[styles.secondaryButtonText, {color: textColor}]}>{label}</Text>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -275,6 +284,7 @@ function App(): React.JSX.Element {
               borderColor={homeTheme.buttonBorder}
               textColor={homeTheme.buttonText}
               onPress={() => setShowDepartments(false)}
+              iconGlyph="‹"
             />
 
             <Text style={[styles.homeTitle, {color: homeTheme.title}]}>Our Departments</Text>
@@ -622,6 +632,27 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#344054',
     fontWeight: '600',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  glyphBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  glyphText: {
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 24,
   },
   settingsRow: {
     borderWidth: 1,
